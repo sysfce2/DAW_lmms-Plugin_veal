@@ -78,7 +78,7 @@ public:
     /// Handle pitch bend message.
     inline void pitch_bend(int channel, int value)
     {
-        fluid_synth_pitch_bend(synth, 0, value + 0x2000);
+        fluid_synth_pitch_bend(synth, channel, value + 0x2000);
     }
     /// Handle control change messages.
     void control_change(int channel, int controller, int value);
@@ -91,9 +91,9 @@ public:
     void activate();
     void deactivate();
     /// No CV inputs for now
-    bool is_cv(int param_no) { return false; }
+    bool is_cv(int param_no) const { return false; }
     /// Practically all the stuff here is noisy... for now
-    bool is_noisy(int param_no) { return true; }
+    bool is_noisy(int param_no) const { return true; }
     /// Main processing function
     uint32_t process(uint32_t offset, uint32_t nsamples, uint32_t inputs_mask, uint32_t outputs_mask);
     /// DSSI-style configure function for handling string port data

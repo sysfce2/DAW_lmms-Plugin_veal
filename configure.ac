@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.63)
-AC_INIT([calf],[0.90.1],[wdev@foltman.com])
+AC_INIT([calf],[0.90.3],[wdev@foltman.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 LT_INIT([dlopen])
@@ -15,6 +15,7 @@ if test "x$prefix" = "xNONE"; then
 fi
 
 # Checks for programs.
+AC_PROG_CXX
 AC_PROG_INSTALL
 
 ############################################################################################
@@ -150,6 +151,14 @@ AC_ARG_ENABLE(sse,
   [set_enable_sse="no"])
 AC_MSG_RESULT($set_enable_sse)
 
+AC_MSG_CHECKING([whether the C++ compiler is gcc])
+if $CXX -v 2>&1 | grep -q 'gcc version'; then
+  is_compiler_gcc="yes"
+else
+  is_compiler_gcc="no"
+fi
+AC_MSG_RESULT($is_compiler_gcc)
+
 ############################################################################################
 # Compute status shell variables
 
@@ -164,8 +173,11 @@ fi
 if test "$set_enable_debug" = "yes"; then
   CXXFLAGS="$CXXFLAGS -O0 -g -Wall"
 else
-  # TODO: remove -finline options if clang is used
-  CXXFLAGS="$CXXFLAGS -O3 -finline-functions -finline-functions-called-once -Wall"
+  if test "$is_compiler_gcc" = "yes"; then
+    CXXFLAGS="$CXXFLAGS -O3 -finline-functions -finline-functions-called-once -finline-limit=80 -Wall"
+  else
+    CXXFLAGS="$CXXFLAGS -O3 -Wall"
+  fi
 fi
 
 if test "$set_enable_sse" = "yes"; then

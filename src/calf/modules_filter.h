@@ -142,6 +142,8 @@ template<typename FilterClass, typename Metadata>
 class filter_module_with_inertia: public audio_module<Metadata>, public FilterClass,
 public frequency_response_line_graph
 {
+    using FilterClass::calculate_filter;
+    using FilterClass::freq_gain;
 public:
     /// These are pointers to the ins, outs, params arrays in the main class
     typedef filter_module_with_inertia inertia_filter_module;
@@ -157,7 +159,7 @@ public:
     dsp::bypass bypass;
     vumeters meters;
 
-    filter_module_with_inertia(float **ins, float **outs, float **params)
+    filter_module_with_inertia()
     : inertia_cutoff(dsp::exponential_ramp(128), 20)
     , inertia_resonance(dsp::exponential_ramp(128), 20)
     , inertia_gain(dsp::exponential_ramp(128), 1.0)
@@ -280,7 +282,6 @@ class filter_audio_module:
     mutable float old_cutoff, old_resonance, old_mode;
 public:    
     filter_audio_module()
-    : filter_module_with_inertia<dsp::biquad_filter_module, filter_metadata>(ins, outs, params)
     {
         last_generation = 0;
         old_mode = old_resonance = old_cutoff = -1;
@@ -447,6 +448,7 @@ public:
 class envelopefilter_audio_module: public audio_module<envelopefilter_metadata>, public dsp::biquad_filter_module,
 public frequency_response_line_graph
 {
+    using dsp::biquad_filter_module::freq_gain;
 public:
     uint32_t srate;
     bool is_active;

@@ -31,6 +31,8 @@ using namespace calf_plugins;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+FORWARD_DECLARE_METADATA(organ)
+
 organ_audio_module::organ_audio_module()
 : drawbar_organ(&par_values)
 {

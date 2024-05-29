@@ -27,6 +27,19 @@
 using namespace dsp;
 using namespace calf_plugins;
 
+FORWARD_DECLARE_METADATA(equalizer5band)
+FORWARD_DECLARE_METADATA(equalizer8band)
+FORWARD_DECLARE_METADATA(equalizer12band)
+FORWARD_DECLARE_METADATA(equalizer30band)
+FORWARD_DECLARE_METADATA(envelopefilter)
+FORWARD_DECLARE_METADATA(filter)
+FORWARD_DECLARE_METADATA(filterclavier)
+FORWARD_DECLARE_METADATA(emphasis)
+FORWARD_DECLARE_METADATA(xover2)
+FORWARD_DECLARE_METADATA(xover3)
+FORWARD_DECLARE_METADATA(xover4)
+FORWARD_DECLARE_METADATA(vocoder)
+
 #define SET_IF_CONNECTED(name) if (params[AM::param_##name] != NULL) *params[AM::param_##name] = name;
 
 /**********************************************************************
@@ -645,7 +658,7 @@ void equalizer30band_audio_module::set_sample_rate(uint32_t sr)
     for(unsigned int i = 0; i < eq_arrL.size(); i++)
     {
         eq_arrL[i]->setSampleRate(srate);
-        eq_arrL[i]->setSampleRate(srate);
+        eq_arrR[i]->setSampleRate(srate);//maybe a typo flaw, by vlee78
     }
 
     int meter[] = {param_level_in_vuL, param_level_in_vuR, param_level_out_vuL, param_level_out_vuR};
@@ -721,8 +734,7 @@ uint32_t equalizer30band_audio_module::process(uint32_t offset, uint32_t numsamp
 **********************************************************************/
 
 filterclavier_audio_module::filterclavier_audio_module() 
-: filter_module_with_inertia<biquad_filter_module, filterclavier_metadata>(ins, outs, params)
-, min_gain(1.0)
+: min_gain(1.0)
 , max_gain(32.0)
 , last_note(-1)
 , last_velocity(-1)

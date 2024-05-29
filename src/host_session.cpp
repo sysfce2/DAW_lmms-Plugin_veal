@@ -19,6 +19,7 @@
  * 02110-1301, USA.
  */
 
+#include <stdlib.h>
 #include <calf/giface.h>
 #include <calf/host_session.h>
 #include <calf/gui.h>
@@ -48,10 +49,6 @@ host_session::host_session(session_environment_iface *se)
     save_file_on_next_idle_call = false;
     quit_on_next_idle_call = 0;
     handle_event_on_next_idle_call = NULL;
-    if (has_gui) {
-        main_win = session_env->create_main_window();
-        main_win->set_owner(this);
-    }
 }
 
 extern "C" plugin_metadata_iface *create_calf_metadata_by_name(const char *effect_name);
@@ -134,7 +131,10 @@ void host_session::open()
     
     client.open(client_name.c_str(), !jack_session_id.empty() ? jack_session_id.c_str() : NULL);
     jack_set_session_callback(client.client, session_callback, this);
+
     if (has_gui) {
+        main_win = session_env->create_main_window();
+        main_win->set_owner(this);
         main_win->add_condition("jackhost");
         main_win->add_condition("directlink");
         main_win->add_condition("configure");
@@ -157,7 +157,11 @@ void host_session::session_callback(jack_session_event_t *event, void *arg)
     case JackSessionSaveAndQuit:
     case JackSessionSaveTemplate:
         host_session *hs = (host_session *)arg;
-        hs->handle_event_on_next_idle_call = event;
+        if(hs->has_gui){
+            hs->handle_jack_session_event(event);
+        } else {
+            hs->handle_event_on_next_idle_call = event;
+        }
     }
     // XXXKF if more than one event happen in a short sequence, the other event
     // may be lost. This calls for implementing a proper event queue.
@@ -279,8 +283,8 @@ void host_session::connect()
                     {
                         fprintf(stderr, "Cannot connect input to plugin %s - the plugin no input ports\n", plugins[0]->name.c_str());
                     } else {
-                        client.connect("system:capture_1", cnp + plugins[0]->get_inputs()[0].name);
-                        client.connect("system:capture_2", cnp + plugins[0]->get_inputs()[1].name);
+                        client.connect(getenv("CALF_IN_1")?getenv("CALF_IN_1"):"system:capture_1", cnp + plugins[0]->get_inputs()[0].name);
+                        client.connect(getenv("CALF_IN_2")?getenv("CALF_IN_2"):"system:capture_2", cnp + plugins[0]->get_inputs()[1].name);
                     }
                 }
                 else
@@ -303,8 +307,8 @@ void host_session::connect()
             {
                 fprintf(stderr, "Cannot connect plugin %s to output - incompatible ports\n", plugins[last]->name.c_str());
             } else {
-                client.connect(cnp + plugins[last]->get_outputs()[0].name, "system:playback_1");
-                client.connect(cnp + plugins[last]->get_outputs()[1].name, "system:playback_2");
+                client.connect(cnp + plugins[last]->get_outputs()[0].name, getenv("CALF_OUT_1")?getenv("CALF_OUT_1"):"system:playback_1");
+                client.connect(cnp + plugins[last]->get_outputs()[1].name, getenv("CALF_OUT_2")?getenv("CALF_OUT_2"):"system:playback_2");
             }
         }
         if (autoconnect_midi != "") {
@@ -364,8 +368,11 @@ void host_session::close()
 {
     if (session_manager)
         session_manager->disconnect();
-    if (has_gui)
+    if (has_gui){
         main_win->on_closed();
+        delete main_win;
+    }
+        
     client.deactivate();
     client.delete_plugins();
     client.destroy_automation_input();
@@ -587,8 +594,7 @@ void host_session::on_idle()
     if (save_file_on_next_idle_call)
     {
         save_file_on_next_idle_call = false;
-        if (has_gui)
-            main_win->save_file();
+        main_win->save_file();
         printf("LADISH Level 1 support: file '%s' saved\n", get_current_filename().c_str());
     }
 
@@ -642,7 +648,5 @@ void host_session::set_current_filename(const std::string &name)
 }
 
 host_session::~host_session()
-{
-    if (has_gui)
-        delete main_win;
+{      
 }

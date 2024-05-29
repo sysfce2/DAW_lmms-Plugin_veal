@@ -462,8 +462,6 @@ int main(int argc, char *argv[])
         sess.calfjackhost_cmd = path;
         free(path);
     }
-    if (sess.has_gui)
-        sess.session_env->init_gui(argc, argv);
     
     // Scan the options for the first time to find switches like --help, -h or -?
     // This avoids starting communication with LASH when displaying help text.
@@ -517,6 +515,7 @@ int main(int argc, char *argv[])
                 break;
             case 'n':
                 sess.has_gui = false;
+                sess.has_trayicon = false;
                 break;
             case 't':
                 sess.has_trayicon = false;
@@ -579,18 +578,24 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Error while loading presets: %s\n", e.what());
         exit(1);
     }
+
+        
     try {
+        if(sess.has_gui){
+            sess.session_env->init_gui(argc, argv);
+        }
         sess.open();
         sess.connect();
         sess.client.activate();
         sess.set_signal_handlers();
         if (sess.has_gui) {
             sess.session_env->start_gui_loop();
-            sess.close();
         } else {
-            while (1)
+            while (sess.quit_on_next_idle_call == 0){
                 sleep(1);
+            }   
         }
+        sess.close();
     }
     catch(std::exception &e)
     {
