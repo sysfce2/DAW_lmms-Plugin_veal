@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.63)
-AC_INIT([calf],[0.90.3],[wdev@foltman.com])
+AC_INIT([calf],[0.90.4],[wdev@foltman.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 LT_INIT([dlopen])
@@ -158,6 +158,19 @@ else
   is_compiler_gcc="no"
 fi
 AC_MSG_RESULT($is_compiler_gcc)
+
+AC_MSG_CHECKING([whether the linker supports -z,nodelete])
+save_LDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS -Wl,-z,nodelete"
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[]],
+    [[]])],
+    [linker_supports_nodelete="yes"],
+    [linker_supports_nodelete="no"],
+    [linker_supports_nodelete="no"])
+AC_MSG_RESULT([$linker_supports_nodelete])
+LDFLAGS="$save_LDFLAGS"
+
+AM_CONDITIONAL(HAVE_LD_NODELETE, test "$linker_supports_nodelete" = "yes")
 
 ############################################################################################
 # Compute status shell variables

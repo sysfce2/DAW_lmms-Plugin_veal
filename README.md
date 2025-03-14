@@ -1,6 +1,8 @@
 Calf Studio gear
 ================
 
+[![Build status](https://github.com/calf-studio-gear/calf/actions/workflows/build.yml/badge.svg)](https://github.com/calf-studio-gear/calf/actions/workflows/build.yml)
+
 ### :warning: **WARNING** :warning: 
 
 * This is an active fork for keeping Calf alive as an LADSPA (v1) fork, predominatly for LMMS.
